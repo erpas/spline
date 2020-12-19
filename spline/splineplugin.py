@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 /***************************************************************************
                      SplinePlugin QGIS plugin
@@ -17,66 +16,127 @@
  *                                                                         *
  ***************************************************************************/
 """
-# Import the PyQt and QGIS libraries
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-from qgis.core import *
-# Initialize Qt resources from file resources.py
-import resources_rc
 import os.path
 
-from splinetool import SplineTool
+from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 
-from settingsdialog import SettingsDialog
+from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtWidgets import QAction
 
-class SplinePlugin:
+from qgis.core import QgsWkbTypes, QgsMapLayerType
 
+from .spline_tool import SplineTool
+from .settingsdialog import SettingsDialog
+from .utils import icon_path
+
+
+class SplinePlugin(object):
     def __init__(self, iface):
-        # Save reference to the QGIS interface
         self.iface = iface
-
-        # There is bug in SIP (Transfer of QgsMapRenderer) 
-        # http://lists.osgeo.org/pipermail/qgis-developer/2013-December/029816.html
-        # so we have to keep reference to QgsMapRenderer
-        self.mapRenderer = iface.mapCanvas().mapRenderer()
-
-        # initialize plugin directory
+        self.canvas = iface.mapCanvas()
         self.plugin_dir = os.path.dirname(__file__)
-        # initialize locale
         locale = QSettings().value("locale/userLocale")[0:2]
-        localePath = os.path.join(self.plugin_dir, 'i18n', 'splineplugin_{}.qm'.format(locale))
-
-        if os.path.exists(localePath):
+        locale_path = os.path.join(self.plugin_dir, "i18n", "splineplugin_{}.qm".format(locale))
+        if os.path.exists(locale_path):
             self.translator = QTranslator()
-            self.translator.load(localePath)
+            self.translator.load(locale_path)
+            QCoreApplication.installTranslator(self.translator)
 
-            if qVersion() > '4.3.3':
-                QCoreApplication.installTranslator(self.translator)
+        self.tool = SplineTool(self.iface)
+        self.connected_layer = None
+        self.settings_dialog = None
+        self.action_settings = None
+        self.action_spline = None
 
     def initGui(self):
-        self.settingsAction = QAction( QCoreApplication.translate("Spline", "Settings" ), self.iface.mainWindow() )
-        self.settingsAction.setObjectName("splineAction")
-        self.settingsAction.triggered.connect(self.openSettings)
+        self.action_settings = QAction(QCoreApplication.translate("Spline", "Settings"), self.iface.mainWindow())
+        self.action_settings.setObjectName("splineAction")
+        self.action_settings.triggered.connect(self.open_settings)
 
-        self.iface.addPluginToVectorMenu(u"Digitize Spline", self.settingsAction)
+        self.iface.addPluginToVectorMenu(u"Digitize Spline", self.action_settings)
 
-        self.spline = SplineTool(self.iface)
+        ico = QIcon(icon_path("icon.png"))
+        self.action_spline = QAction(
+            ico,
+            QCoreApplication.translate("spline", "Digitize Spline Curves"),
+            self.iface.mainWindow(),
+        )
+        self.action_spline.setObjectName("actionSpline")
+        self.action_spline.setEnabled(False)
+        self.action_spline.setCheckable(True)
 
+        # Connect to signals for button behaviour
+        self.action_spline.triggered.connect(self.digitize)
+        self.iface.currentLayerChanged.connect(self.layer_changed)
+        self.layer_changed()  # to enable when plugin is loaded
+
+        self.canvas.mapToolSet.connect(self.deactivate)
+
+        # Add actions to the toolbar
+        self.iface.addToolBarIcon(self.action_spline)
 
     def unload(self):
         # Remove the plugin menu item and icon
-        self.iface.removePluginVectorMenu(u"Digitize Spline", self.settingsAction )
-        del self.spline # removes its action from toolbar
+        self.iface.removeToolBarIcon(self.action_spline)
+        self.iface.removePluginVectorMenu(u"Digitize Spline", self.action_settings)
 
-    def run(self):
-        pass
+    def open_settings(self):
+        self.settings_dialog = SettingsDialog()
+        self.settings_dialog.changed.connect(self.settings_changed)
+        self.settings_dialog.show()
 
-    def openSettings(self):
-        # button signals in SettingsDialog were not working on Win7/64
-        # if SettingsDialog was created with iface.mainWindow() as parent
-        #self.settingsDialog = SettingsDialog(self.iface.mainWindow())
-        self.settingsDialog = SettingsDialog()
-        self.settingsDialog.changed.connect( self.spline.settingsChanged )
-        self.settingsDialog.show()
-        
+    def digitize(self):
+        self.canvas.setMapTool(self.tool)
+        self.action_spline.setChecked(True)
 
+    def is_active_layer_for_spline(self):
+        layer = self.iface.activeLayer()
+        if layer is None:
+            return False
+        if layer.type() != QgsMapLayerType.VectorLayer:
+            return False
+        if not layer.geometryType() in (
+            QgsWkbTypes.LineGeometry,
+            QgsWkbTypes.PolygonGeometry,
+        ):
+            return False
+        return True
+
+    def enable_action(self):
+        self.action_spline.setEnabled(False)
+        self.action_spline.setChecked(False)
+        if self.is_active_layer_for_spline():
+            if self.iface.activeLayer().isEditable():
+                self.action_spline.setEnabled(True)
+
+    def layer_changed(self):
+        self.deactivate()
+        self.tool.deactivate()
+        self.enable_action()
+        self.connect_layer()
+
+    def connect_layer(self):
+        self.disconnect_layer()
+        if not self.is_active_layer_for_spline():
+            return
+        layer = self.iface.activeLayer()
+        if layer is None:
+            return
+        self.connected_layer = layer
+        layer.editingStopped.connect(self.enable_action)
+        layer.editingStarted.connect(self.enable_action)
+
+    def disconnect_layer(self):
+        try:
+            self.connected_layer.editingStopped.disconnect(self.enable_action)
+            self.connected_layer.editingStarted.disconnect(self.enable_action)
+        except (RuntimeError, AttributeError, TypeError):
+            pass
+        self.connected_layer = None
+
+    def deactivate(self):
+        self.tool.deactivate()
+        self.action_spline.setChecked(False)
+
+    def settings_changed(self):
+        self.tool.refresh()

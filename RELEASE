@@ -1,9 +1,0 @@
-Release steps:
-
-* make resources in spline/: make
-* verify there are no print calls uncommented
-* set new version in spline/metadata.txt
-* create package in spline/: make package VERSION=x.x.x
-* git commit
-* tag new version in git
-* git push; git push --tags
