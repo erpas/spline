@@ -2,10 +2,10 @@
 name=Spline
 qgisMinimumVersion=3.00
 qgisMaximumVersion=3.99
-description=Digitize spline curves 
+description=Digitize spline curves
 version=0.2
-author=Radim Blazek
-email=radim.blazek@gmail.com
+author=Radim Blazek, Radek Pasiok
+email=rpasiok@gmail.com
 
 # end of mandatory metadata
 
@@ -19,9 +19,9 @@ changelog=
 # tags are comma separated with spaces allowed
 tags=vector,digitizing,spline,curve
 
-homepage=https://github.com/blazek/spline/
-tracker=https://github.com/blazek/spline/issues/
-repository=https://github.com/blazek/spline/
+homepage=https://github.com/erpas/spline/
+tracker=https://github.com/erpas/spline/issues/
+repository=https://github.com/erpas/spline/
 icon=icon.png
 # experimental flag
 experimental=False
