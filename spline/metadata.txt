@@ -2,10 +2,12 @@
 name=Spline
 qgisMinimumVersion=3.00
 qgisMaximumVersion=3.99
-description=Digitize spline curves
+description=Splines digitizing tool (spline = a chain of lines). Comes with a Processing algorithm for converting lines into splines.
+hasProcessingProvider=yes
 version=0.2
 author=Radim Blazek, Radek Pasiok
 email=rpasiok@gmail.com
+about=A modified cubic Hermite spline interpolator is used to obtain continuous piecewise third-degree polynomials between knots (known spline points). Each piece is converted to a chain of lines which is then simplified with Douglas-Peuker algorithm. The Processing algorithm supports vertices' z and m values - they are interpolated linearly between knots.
 
 # end of mandatory metadata
 
@@ -14,6 +16,7 @@ email=rpasiok@gmail.com
 changelog=
     0.2 Port to QGIS 3
         * added keyboard interaction while digitizing (ESC and backspace)
+        * added processing alg for converting lines into splines
     0.1.6 Fixed duplicate feature in QGIS
 
 # tags are comma separated with spaces allowed

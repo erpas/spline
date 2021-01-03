@@ -6,14 +6,50 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>494</width>
-    <height>101</height>
+    <width>407</width>
+    <height>156</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Digitize Spline Settings</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_5">
+     <item>
+      <widget class="QLabel" name="splineTightnessLabel">
+       <property name="text">
+        <string>Tightness / tension</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDoubleSpinBox" name="splineTightnessSpinBox">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="decimals">
+        <number>3</number>
+       </property>
+       <property name="minimum">
+        <double>0.010000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>5.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.100000000000000</double>
+       </property>
+       <property name="value">
+        <double>0.500000000000000</double>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
@@ -51,33 +87,27 @@
     </layout>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_5">
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <property name="bottomMargin">
+      <number>0</number>
+     </property>
      <item>
-      <widget class="QLabel" name="splineTightnessLabel">
+      <widget class="QLabel" name="label">
        <property name="text">
-        <string>Tightness</string>
+        <string>Max number of segments</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QDoubleSpinBox" name="splineTightnessSpinBox">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
+      <widget class="QSpinBox" name="max_segments_nr_sbox">
        <property name="minimum">
-        <double>0.010000000000000</double>
+        <number>1</number>
        </property>
        <property name="maximum">
-        <double>10.000000000000000</double>
-       </property>
-       <property name="singleStep">
-        <double>0.100000000000000</double>
+        <number>1000</number>
        </property>
        <property name="value">
-        <double>0.100000000000000</double>
+        <number>50</number>
        </property>
       </widget>
      </item>

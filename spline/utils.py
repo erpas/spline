@@ -22,6 +22,7 @@ SETTINGS_NAME = "SplinePlugin"
 
 DEFAULT_TOLERANCE = 1.0
 DEFAULT_TIGHTNESS = 0.5
+DEFAULT_MAX_SEGMENTS = 50
 
 
 def icon_path(icon_filename):

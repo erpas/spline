@@ -24,6 +24,8 @@ from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 
 from qgis.core import QgsWkbTypes, QgsMapLayerType
+from qgis.core import QgsApplication
+from .processing_provider.provider import Provider as proc_provider
 
 from .spline_tool import SplineTool
 from .settingsdialog import SettingsDialog
@@ -35,6 +37,7 @@ class SplinePlugin(object):
         self.iface = iface
         self.canvas = iface.mapCanvas()
         self.plugin_dir = os.path.dirname(__file__)
+        self.proc_provider = None
         locale = QSettings().value("locale/userLocale")[0:2]
         locale_path = os.path.join(self.plugin_dir, "i18n", "splineplugin_{}.qm".format(locale))
         if os.path.exists(locale_path):
@@ -48,7 +51,12 @@ class SplinePlugin(object):
         self.action_settings = None
         self.action_spline = None
 
+    def initProcessing(self):
+        self.proc_provider = proc_provider()
+        QgsApplication.processingRegistry().addProvider(self.proc_provider)
+
     def initGui(self):
+        self.initProcessing()
         self.action_settings = QAction(QCoreApplication.translate("Spline", "Settings"), self.iface.mainWindow())
         self.action_settings.setObjectName("splineAction")
         self.action_settings.triggered.connect(self.open_settings)
@@ -58,7 +66,7 @@ class SplinePlugin(object):
         ico = QIcon(icon_path("icon.png"))
         self.action_spline = QAction(
             ico,
-            QCoreApplication.translate("spline", "Digitize Spline Curves"),
+            QCoreApplication.translate("spline", "Digitize Splines"),
             self.iface.mainWindow(),
         )
         self.action_spline.setObjectName("actionSpline")
@@ -76,7 +84,7 @@ class SplinePlugin(object):
         self.iface.addToolBarIcon(self.action_spline)
 
     def unload(self):
-        # Remove the plugin menu item and icon
+        QgsApplication.processingRegistry().removeProvider(self.proc_provider)
         self.iface.removeToolBarIcon(self.action_spline)
         self.iface.removePluginVectorMenu(u"Digitize Spline", self.action_settings)
 

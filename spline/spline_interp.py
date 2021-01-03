@@ -25,19 +25,21 @@ from qgis.core import (
 )
 
 import math
-from .utils import DEFAULT_TIGHTNESS, DEFAULT_TOLERANCE, SETTINGS_NAME
+from .utils import DEFAULT_TIGHTNESS, DEFAULT_TOLERANCE, DEFAULT_MAX_SEGMENTS, SETTINGS_NAME
 
 
-def interpolate(points, tolerance=None, tightness=None):
+def interpolate(points, tolerance=None, tightness=None, max_segments=None):
     if tolerance is None:
         tolerance = QSettings().value(SETTINGS_NAME + "/tolerance", DEFAULT_TOLERANCE, float)
     if tightness is None:
         tightness = QSettings().value(SETTINGS_NAME + "/tightness", DEFAULT_TIGHTNESS, float)
-    points = hermite(points, tolerance, tightness)
+    if max_segments is None:
+        max_segments = QSettings().value(SETTINGS_NAME + "/max_segments", DEFAULT_MAX_SEGMENTS, int)
+    points = hermite(points, tolerance, tightness, max_segments)
     return [QgsPointXY(pt) for pt in points]
 
 
-def hermite(points, tolerance, tightness):
+def hermite(points, tolerance, tightness, max_segments):
     npoints = len(points)
     if npoints < 3:
         return list(points)  # return copy
@@ -71,7 +73,7 @@ def hermite(points, tolerance, tightness):
         # t = float(step)/dist
 
         # for now we just make 50 points (more may become slow) and prune them using tolerance
-        t = 1.0 / 50.
+        t = 1.0 / float(max_segments)
         s = t
 
         tmp_points = []
@@ -112,7 +114,12 @@ def points_tangent_scaled(p1, p2, k):
 
 
 def simplify_points(points, tolerance):
-    geo = QgsGeometry.fromPolyline(points)
+    pts = []
+    for pt in points:
+        if isinstance(pt, QgsPointXY):
+            pt = QgsPoint(pt)
+        pts.append(pt)
+    geo = QgsGeometry.fromPolyline(pts)
     geo = geo.simplify(tolerance)
     return geo.asPolyline()
 
