@@ -1,5 +1,7 @@
 # Spline
 
+![Spline plugin demo](./spline/img/spline_plugin_demo.gif)
+
 Spline is a QGIS plugin for digitizing splines as a chain of straight lines. 
 It comes with a Processing algorithm for converting lines into splines. 
 
