@@ -1,4 +1,3 @@
-# -*- coding: latin1 -*-
 """
 /***************************************************************************
                                 Spline Plugin
@@ -17,8 +16,15 @@
  *                                                                         *
  ***************************************************************************/
 """
+import os
 
 SETTINGS_NAME = "SplinePlugin"
 
 DEFAULT_TOLERANCE = 1.0
 DEFAULT_TIGHTNESS = 0.5
+DEFAULT_MAX_SEGMENTS = 50
+
+
+def icon_path(icon_filename):
+    plugin_dir = os.path.dirname(__file__)
+    return os.path.join(plugin_dir, icon_filename)

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 /***************************************************************************
   Spline plugin SettingsDialog
@@ -17,33 +16,37 @@
  *                                                                         *
  ***************************************************************************/
 """
+import os
+from qgis.PyQt import uic
+from qgis.PyQt.QtCore import Qt, pyqtSignal, QSettings
+from qgis.PyQt.QtWidgets import QDialogButtonBox
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-from qgis.core import *
-from qgis.gui import *
+from .utils import DEFAULT_TIGHTNESS, DEFAULT_TOLERANCE, DEFAULT_MAX_SEGMENTS, SETTINGS_NAME
 
-from utils import *
+base_dir = os.path.dirname(__file__)
+uicls_log, basecls_log = uic.loadUiType(os.path.join(base_dir, "ui_settingsdialog.ui"))
 
-from ui_settingsdialog import Ui_SettingsDialog
 
-class SettingsDialog( QDialog, Ui_SettingsDialog ):
-    changed = pyqtSignal(name = 'changed')
+class SettingsDialog(uicls_log, basecls_log):
 
-    def __init__( self, parent = None ):
-        super( SettingsDialog, self).__init__(parent )
-        self.setupUi( self )
-        self.setAttribute( Qt.WA_DeleteOnClose )
+    changed = pyqtSignal()
 
-        self.tolerance = float( QSettings().value(SETTINGS_NAME + "/tolerance", DEFAULT_TOLERANCE ))
-        self.splineToleranceSpinBox.setValue( self.tolerance )
+    def __init__(self, parent=None):
+        super(SettingsDialog, self).__init__(parent)
+        self.setupUi(self)
+        self.setAttribute(Qt.WA_DeleteOnClose)
 
-        self.tightness = float( QSettings().value(SETTINGS_NAME + "/tightness", DEFAULT_TIGHTNESS ) )
-        self.splineTightnessSpinBox.setValue(  self.tightness )
+        self.tightness = QSettings().value(SETTINGS_NAME + "/tightness", DEFAULT_TIGHTNESS, float)
+        self.splineTightnessSpinBox.setValue(self.tightness)
+
+        self.tolerance = QSettings().value(SETTINGS_NAME + "/tolerance", DEFAULT_TOLERANCE, float)
+        self.splineToleranceSpinBox.setValue(self.tolerance)
+
+        self.max_segments = QSettings().value(SETTINGS_NAME + "/max_segments", DEFAULT_MAX_SEGMENTS, int)
+        self.max_segments_nr_sbox.setValue(self.max_segments)
 
         self.buttonBox.button(QDialogButtonBox.Ok).clicked.connect(self.ok)
         self.buttonBox.button(QDialogButtonBox.Cancel).clicked.connect(self.cancel)
-        #self.buttonBox.button(QDialogButtonBox.Reset).clicked.connect(self.reset)
         self.buttonBox.button(QDialogButtonBox.RestoreDefaults).clicked.connect(self.defaults)
         self.buttonBox.button(QDialogButtonBox.Apply).clicked.connect(self.apply)
 
@@ -52,19 +55,15 @@ class SettingsDialog( QDialog, Ui_SettingsDialog ):
         self.close()
 
     def apply(self):
-        QSettings().setValue(SETTINGS_NAME+"/tolerance", self.splineToleranceSpinBox.value())
-        QSettings().setValue(SETTINGS_NAME+"/tightness", self.splineTightnessSpinBox.value() )
+        QSettings().setValue(SETTINGS_NAME + "/tightness", self.splineTightnessSpinBox.value())
+        QSettings().setValue(SETTINGS_NAME + "/tolerance", self.splineToleranceSpinBox.value())
+        QSettings().setValue(SETTINGS_NAME + "/max_segments", self.max_segments_nr_sbox.value())
         self.changed.emit()
 
     def cancel(self):
         self.close()
 
-    # Disabled because there were too many buttons
-    #def reset(self):
-        ## reset to orig values (when dialog was opened)
-        #self.splineToleranceSpinBox.setValue( self.tolerance )
-        #self.splineTightnessSpinBox.setValue(  self.tightness )
-
     def defaults(self):
-        self.splineToleranceSpinBox.setValue( DEFAULT_TOLERANCE )
-        self.splineTightnessSpinBox.setValue( DEFAULT_TIGHTNESS )
+        self.splineTightnessSpinBox.setValue(DEFAULT_TIGHTNESS)
+        self.splineToleranceSpinBox.setValue(DEFAULT_TOLERANCE)
+        self.max_segments_nr_sbox.setValue(DEFAULT_MAX_SEGMENTS)
